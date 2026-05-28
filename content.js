@@ -1,7 +1,6 @@
 (function() {
   if (window.__wde_injected) return;
   window.__wde_injected = true;
-
   let uiContainer = null;
   let shadowRoot = null;
   let isVisible = false;
@@ -9,7 +8,6 @@
   let iterationPath = [];
   let columns = [];
   let hoveredElement = null;
-
   // Listen for toggle
   if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -18,10 +16,8 @@
       }
     });
   }
-
   // Expose toggleUI for testing
   window.__wde_toggle = toggleUI;
-
   function toggleUI() {
     if (!uiContainer) {
       createUI();
@@ -34,7 +30,6 @@
       cancelSelection();
     }
   }
-
   function createUI() {
     uiContainer = document.createElement('div');
     uiContainer.id = "wde-root";
@@ -46,9 +41,7 @@
     uiContainer.style.overflowY = "auto";
     uiContainer.style.zIndex = "2147483647";
     uiContainer.style.display = "none";
-
     shadowRoot = uiContainer.attachShadow({ mode: 'open' });
-
     const style = document.createElement('style');
     style.textContent = `
       :host {
@@ -163,19 +156,15 @@
       }
     `;
     shadowRoot.appendChild(style);
-
     const content = document.createElement('div');
     content.id = 'content';
     shadowRoot.appendChild(content);
-
     document.body.appendChild(uiContainer);
-
     // Setup global listeners for selection
     document.addEventListener('mouseover', handleMouseOver, true);
     document.addEventListener('mouseout', handleMouseOut, true);
     document.addEventListener('click', handleClick, true);
   }
-
   function getElementPath(el) {
     const path = [];
     let current = el;
@@ -184,9 +173,9 @@
       if (current.id) {
         selector = '#' + current.id;
       } else if (current.className && typeof current.className === 'string') {
-        const classes = current.className.trim().split(/\\s+/).filter(c => c && !c.startsWith('wde-'));
+        const classes = current.className.trim().split(/\s+/).filter(c => c && !c.startsWith('wde-'));
         if (classes.length > 0) {
-          selector += '.' + CSS.escape(classes[0]); // Use first class only to avoid overly specific/brittle selectors
+          selector += '.' + classes.map(c => CSS.escape(c)).join('.');
         }
       }
       path.unshift(selector);
@@ -194,18 +183,15 @@
     }
     return path;
   }
-
   function handleMouseOver(e) {
     if (!selectingMode) return;
     if (uiContainer.contains(e.target)) return;
-
     if (hoveredElement) {
       hoveredElement.classList.remove('wde-highlight');
     }
     hoveredElement = e.target;
     hoveredElement.classList.add('wde-highlight');
   }
-
   function handleMouseOut(e) {
     if (!selectingMode) return;
     if (hoveredElement) {
@@ -213,20 +199,15 @@
       hoveredElement = null;
     }
   }
-
   function handleClick(e) {
     if (!selectingMode) return;
     if (uiContainer.contains(e.target)) return;
-
     e.preventDefault();
     e.stopPropagation();
-
     if (hoveredElement) {
       hoveredElement.classList.remove('wde-highlight');
     }
-
     const target = e.target;
-
     if (selectingMode === 'iteration') {
       iterationPath = getElementPath(target);
     } else {
@@ -249,13 +230,11 @@
         }
       }
     }
-
     selectingMode = null;
     document.body.classList.remove('wde-selecting');
     uiContainer.style.display = "block"; // Restore UI
     render();
   }
-
   function getRelativeSelector(parent, child) {
     if (parent === child) return "";
     let path = [];
@@ -263,26 +242,21 @@
     while (current && current !== parent && current !== document) {
       let selector = current.tagName.toLowerCase();
       if (current.className && typeof current.className === 'string') {
-        const classes = current.className.trim().split(/\\s+/).filter(c => c && !c.startsWith('wde-'));
+        const classes = current.className.trim().split(/\s+/).filter(c => c && !c.startsWith('wde-'));
         if (classes.length > 0) {
-          selector += '.' + CSS.escape(classes[0]); // just use first class for simplicity
+          selector += '.' + classes.map(c => CSS.escape(c)).join('.');
         }
       }
-
-      // Add nth-child if needed to be more specific, but for template extraction
-      // we usually just want the class structure.
       path.unshift(selector);
       current = current.parentNode;
     }
     return path.join(' > ');
   }
-
   function startSelecting(mode) {
     selectingMode = mode;
     uiContainer.style.display = "none";
     document.body.classList.add('wde-selecting');
   }
-
   function cancelSelection() {
     selectingMode = null;
     document.body.classList.remove('wde-selecting');
@@ -291,40 +265,32 @@
       hoveredElement = null;
     }
   }
-
   function getIterationSelector() {
     if (iterationPath.length === 0) return "";
     return iterationPath.join(' ');
   }
-
   function render() {
     if (!shadowRoot) return;
     const content = shadowRoot.getElementById('content');
     content.innerHTML = '';
-
     const title = document.createElement('h2');
     title.textContent = 'Web Data Extractor';
     content.appendChild(title);
-
     // Iteration Target Section
     const iterSection = document.createElement('div');
     iterSection.className = 'section';
     iterSection.innerHTML = `<div><strong>Iteration Target</strong></div>`;
-
     const selectIterBtn = document.createElement('button');
     selectIterBtn.textContent = iterationPath.length ? 'Reselect Target' : 'Select Target';
     selectIterBtn.onclick = () => startSelecting('iteration');
     iterSection.appendChild(selectIterBtn);
-
     if (iterationPath.length > 0) {
       const pathContainer = document.createElement('div');
       pathContainer.className = 'path-buttons';
-
       iterationPath.forEach((part, index) => {
         const btn = document.createElement('button');
         btn.className = 'path-btn';
         btn.textContent = '[' + part + ']';
-
         btn.onmouseover = () => {
           const selector = iterationPath.slice(0, index + 1).join(' ');
           try {
@@ -341,11 +307,9 @@
           iterationPath = iterationPath.slice(0, index + 1);
           render();
         };
-
         pathContainer.appendChild(btn);
       });
       iterSection.appendChild(pathContainer);
-
       const finalSelectorDiv = document.createElement('div');
       finalSelectorDiv.style.marginTop = '8px';
       finalSelectorDiv.style.fontSize = '12px';
@@ -355,15 +319,12 @@
       iterSection.appendChild(finalSelectorDiv);
     }
     content.appendChild(iterSection);
-
     // Columns Section
     const colsSection = document.createElement('div');
     colsSection.className = 'section';
-
     const colsHeader = document.createElement('div');
     colsHeader.className = 'column-header';
     colsHeader.innerHTML = `<strong>Columns</strong>`;
-
     const addColBtn = document.createElement('button');
     addColBtn.textContent = '+ Add Column';
     addColBtn.onclick = () => {
@@ -372,18 +333,15 @@
     };
     colsHeader.appendChild(addColBtn);
     colsSection.appendChild(colsHeader);
-
     columns.forEach((col, index) => {
       const colDiv = document.createElement('div');
       colDiv.className = 'column';
-
       const row1 = document.createElement('div');
       row1.className = 'row';
       const nameInput = document.createElement('input');
       nameInput.value = col.name;
       nameInput.placeholder = 'Column Name';
       nameInput.onchange = (e) => { col.name = e.target.value; };
-
       const delBtn = document.createElement('button');
       delBtn.textContent = '✕';
       delBtn.style.padding = '4px 8px';
@@ -391,30 +349,23 @@
         columns.splice(index, 1);
         render();
       };
-
       row1.appendChild(nameInput);
       row1.appendChild(delBtn);
       colDiv.appendChild(row1);
-
       const row2 = document.createElement('div');
       row2.className = 'row';
-
       const selInput = document.createElement('input');
       selInput.value = col.selector;
       selInput.placeholder = 'CSS Selector';
       selInput.onchange = (e) => { col.selector = e.target.value; };
-
       const pickBtn = document.createElement('button');
       pickBtn.textContent = 'Select';
       pickBtn.onclick = () => startSelecting(col.id);
-
       row2.appendChild(selInput);
       row2.appendChild(pickBtn);
       colDiv.appendChild(row2);
-
       const row3 = document.createElement('div');
       row3.className = 'row';
-
       const typeSelect = document.createElement('select');
       ['innerText', 'innerHTML', 'href', 'data'].forEach(t => {
         const opt = document.createElement('option');
@@ -428,7 +379,6 @@
         render();
       };
       row3.appendChild(typeSelect);
-
       if (col.type === 'data') {
         const dataInput = document.createElement('input');
         dataInput.value = col.dataKey;
@@ -436,33 +386,26 @@
         dataInput.onchange = (e) => { col.dataKey = e.target.value; };
         row3.appendChild(dataInput);
       }
-
       colDiv.appendChild(row3);
       colsSection.appendChild(colDiv);
     });
-
     content.appendChild(colsSection);
-
     // Grab & Export
     if (iterationPath.length > 0 && columns.length > 0) {
       const actionSection = document.createElement('div');
       actionSection.className = 'section';
-
       const grabBtn = document.createElement('button');
       grabBtn.className = 'primary';
       grabBtn.textContent = 'Grab Data';
       grabBtn.style.width = '100%';
       grabBtn.onclick = performGrab;
       actionSection.appendChild(grabBtn);
-
       content.appendChild(actionSection);
     }
   }
-
   function performGrab() {
     const iterSel = getIterationSelector();
     if (!iterSel) return;
-
     let elements;
     try {
       elements = document.querySelectorAll(iterSel);
@@ -470,9 +413,7 @@
       alert('Invalid iteration selector');
       return;
     }
-
     const data = [];
-
     elements.forEach(el => {
       const rowData = {};
       columns.forEach(col => {
@@ -484,7 +425,6 @@
             targetEl = null;
           }
         }
-
         let val = '';
         if (targetEl) {
           if (col.type === 'innerText') val = targetEl.innerText || '';
@@ -496,13 +436,10 @@
       });
       data.push(rowData);
     });
-
     showResults(data);
   }
-
   function showResults(data) {
     const content = shadowRoot.getElementById('content');
-
     let resSection = shadowRoot.getElementById('results-section');
     if (!resSection) {
       resSection = document.createElement('div');
@@ -510,25 +447,19 @@
       resSection.className = 'section results';
       content.appendChild(resSection);
     }
-
     resSection.innerHTML = `<div><strong>Extracted ${data.length} rows</strong></div>`;
-
     const actions = document.createElement('div');
     actions.className = 'actions';
-
     const csvBtn = document.createElement('button');
     csvBtn.textContent = 'Download CSV';
     csvBtn.onclick = () => downloadCSV(data);
-
     const jsonBtn = document.createElement('button');
     jsonBtn.textContent = 'Download JSON';
     jsonBtn.onclick = () => downloadJSON(data);
-
     actions.appendChild(csvBtn);
     actions.appendChild(jsonBtn);
     resSection.appendChild(actions);
   }
-
   function downloadJSON(data) {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -538,7 +469,6 @@
     a.click();
     URL.revokeObjectURL(url);
   }
-
   function downloadCSV(data) {
     if (data.length === 0) return;
     const headers = Object.keys(data[0]);
@@ -549,8 +479,7 @@
         return `"${val}"`;
       }).join(',');
     });
-
-    const csvContent = [headers.join(','), ...rows].join('\\n');
+    const csvContent = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -559,5 +488,4 @@
     a.click();
     URL.revokeObjectURL(url);
   }
-
 })();
