@@ -215,21 +215,18 @@
       const colId = selectingMode;
       const col = columns.find(c => c.id === colId);
       if (col) {
-        // Try to get relative path to closest iteration target
+        // Try to get relative selector to closest iteration target
         const iterSelector = getIterationSelector();
         if (iterSelector) {
           const closestIter = target.closest(iterSelector);
           if (closestIter) {
-            col.path = getRelativePath(closestIter, target);
-            col.selector = col.path.join(' > ') || ":scope";
+            col.selector = getRelativeSelector(closestIter, target) || ":scope";
           } else {
             // Fallback
-            col.path = getRelativePath(document.body, target);
-            col.selector = col.path.join(' > ');
+            col.selector = getRelativeSelector(document.body, target);
           }
         } else {
-          col.path = getRelativePath(document.body, target);
-          col.selector = col.path.join(' > ');
+          col.selector = getRelativeSelector(document.body, target);
         }
       }
     }
@@ -238,8 +235,8 @@
     uiContainer.style.display = "block"; // Restore UI
     render();
   }
-  function getRelativePath(parent, child) {
-    if (parent === child) return [];
+  function getRelativeSelector(parent, child) {
+    if (parent === child) return "";
     let path = [];
     let current = child;
     while (current && current !== parent && current !== document) {
@@ -253,7 +250,7 @@
       path.unshift(selector);
       current = current.parentNode;
     }
-    return path;
+    return path.join(' > ');
   }
   function startSelecting(mode) {
     selectingMode = mode;
@@ -331,7 +328,7 @@
     const addColBtn = document.createElement('button');
     addColBtn.textContent = '+ Add Column';
     addColBtn.onclick = () => {
-      columns.push({ id: Date.now().toString(), name: 'Col ' + (columns.length + 1), selector: '', path: [], type: 'innerText', dataKey: '' });
+      columns.push({ id: Date.now().toString(), name: 'Col ' + (columns.length + 1), selector: '', type: 'innerText', dataKey: '' });
       render();
     };
     colsHeader.appendChild(addColBtn);
@@ -367,48 +364,6 @@
       row2.appendChild(selInput);
       row2.appendChild(pickBtn);
       colDiv.appendChild(row2);
-
-      if (col.path && col.path.length > 0) {
-        const pathContainer = document.createElement('div');
-        pathContainer.className = 'path-buttons';
-        pathContainer.style.marginBottom = '8px';
-
-        col.path.forEach((part, index) => {
-          const btn = document.createElement('button');
-          btn.className = 'path-btn';
-          btn.textContent = '[' + part + ']';
-
-          btn.onmouseover = () => {
-            const relSel = col.path.slice(0, index + 1).join(' > ');
-            const iterSel = getIterationSelector();
-            if (iterSel) {
-              const fullSel = iterSel + ' ' + relSel;
-              try {
-                document.querySelectorAll(fullSel).forEach(el => el.classList.add('wde-highlight-secondary'));
-              } catch(e){}
-            }
-          };
-          btn.onmouseout = () => {
-            const relSel = col.path.slice(0, index + 1).join(' > ');
-            const iterSel = getIterationSelector();
-            if (iterSel) {
-              const fullSel = iterSel + ' ' + relSel;
-              try {
-                document.querySelectorAll(fullSel).forEach(el => el.classList.remove('wde-highlight-secondary'));
-              } catch(e){}
-            }
-          };
-          btn.onclick = () => {
-            col.path = col.path.slice(0, index + 1);
-            col.selector = col.path.join(' > ');
-            render();
-          };
-
-          pathContainer.appendChild(btn);
-        });
-        colDiv.appendChild(pathContainer);
-      }
-
       const row3 = document.createElement('div');
       row3.className = 'row';
       const typeSelect = document.createElement('select');
@@ -439,32 +394,16 @@
     if (iterationPath.length > 0 && columns.length > 0) {
       const actionSection = document.createElement('div');
       actionSection.className = 'section';
-
-      const actionsRow = document.createElement('div');
-      actionsRow.style.display = 'flex';
-      actionsRow.style.gap = '8px';
-
-      const previewBtn = document.createElement('button');
-      previewBtn.textContent = 'Preview';
-      previewBtn.style.flex = '1';
-      previewBtn.onclick = () => performGrab(true);
-
       const grabBtn = document.createElement('button');
       grabBtn.className = 'primary';
       grabBtn.textContent = 'Grab Data';
-      grabBtn.style.flex = '2';
-      grabBtn.onclick = () => performGrab(false);
-
-      actionsRow.appendChild(previewBtn);
-      actionsRow.appendChild(grabBtn);
-
-      actionSection.appendChild(actionsRow);
-
+      grabBtn.style.width = '100%';
+      grabBtn.onclick = performGrab;
+      actionSection.appendChild(grabBtn);
       content.appendChild(actionSection);
     }
   }
-
-  function performGrab(isPreview = false) {
+  function performGrab() {
     const iterSel = getIterationSelector();
     if (!iterSel) return;
     let elements;
@@ -475,13 +414,7 @@
       return;
     }
     const data = [];
-
-    const limit = isPreview ? 3 : elements.length;
-    let count = 0;
-
-    for (const el of elements) {
-      if (count >= limit) break;
-
+    elements.forEach(el => {
       const rowData = {};
       columns.forEach(col => {
         let targetEl = el;
@@ -502,41 +435,9 @@
         rowData[col.name] = val.trim();
       });
       data.push(rowData);
-      count++;
-    }
-
-    if (isPreview) {
-      showPreview(data);
-    } else {
-      showResults(data);
-    }
+    });
+    showResults(data);
   }
-
-  function showPreview(data) {
-    const content = shadowRoot.getElementById('content');
-
-    let resSection = shadowRoot.getElementById('results-section');
-    if (!resSection) {
-      resSection = document.createElement('div');
-      resSection.id = 'results-section';
-      resSection.className = 'section results';
-      content.appendChild(resSection);
-    }
-
-    resSection.innerHTML = `<div><strong>Preview (First ${data.length} items)</strong></div>`;
-
-    const pre = document.createElement('pre');
-    pre.style.background = '#1e1e1e';
-    pre.style.padding = '8px';
-    pre.style.borderRadius = '4px';
-    pre.style.fontSize = '12px';
-    pre.style.overflowX = 'auto';
-    pre.style.border = '1px solid #333';
-    pre.textContent = JSON.stringify(data, null, 2);
-
-    resSection.appendChild(pre);
-  }
-
   function showResults(data) {
     const content = shadowRoot.getElementById('content');
     let resSection = shadowRoot.getElementById('results-section');
