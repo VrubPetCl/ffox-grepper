@@ -186,7 +186,7 @@
       } else if (current.className && typeof current.className === 'string') {
         const classes = current.className.trim().split(/\\s+/).filter(c => c && !c.startsWith('wde-'));
         if (classes.length > 0) {
-          selector += '.' + classes.join('.');
+          selector += '.' + CSS.escape(classes[0]); // Use first class only to avoid overly specific/brittle selectors
         }
       }
       path.unshift(selector);
@@ -265,7 +265,7 @@
       if (current.className && typeof current.className === 'string') {
         const classes = current.className.trim().split(/\\s+/).filter(c => c && !c.startsWith('wde-'));
         if (classes.length > 0) {
-          selector += '.' + classes[0]; // just use first class for simplicity
+          selector += '.' + CSS.escape(classes[0]); // just use first class for simplicity
         }
       }
 
