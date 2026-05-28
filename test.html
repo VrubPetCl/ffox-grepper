@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Page</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .product-list { display: flex; gap: 20px; }
+    .product-card { border: 1px solid #ccc; padding: 10px; width: 200px; }
+    .title { font-weight: bold; }
+    .price { color: green; }
+    .link { display: block; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Product List</h1>
+  <div class="product-list" id="product-listing">
+    <div class="product-card" data-id="101">
+      <div class="title">Product 1</div>
+      <div class="price">$10.00</div>
+      <a href="/p/1" class="link">View</a>
+    </div>
+    <div class="product-card" data-id="102">
+      <div class="title">Product 2</div>
+      <div class="price">$20.00</div>
+      <a href="/p/2" class="link">View</a>
+    </div>
+  </div>
+</body>
+</html>
