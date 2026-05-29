@@ -12,10 +12,26 @@ chrome.commands.onCommand.addListener((command) => {
   }
 });
 
-function toggleExtension(tab) {
-  if (tab.id) {
-    chrome.tabs.sendMessage(tab.id, { action: "toggle_ui" }).catch(err => {
-      console.log("Could not send message to tab, maybe it's not injected yet.", err);
-    });
+async function toggleExtension(tab) {
+  if (!tab.id) return;
+  
+  try {
+    await chrome.tabs.sendMessage(tab.id, { action: "toggle_ui" });
+  } catch (err) {
+    console.info("Content script not responding. Attempting to inject...", err);
+    try {
+      await chrome.scripting.insertCSS({
+        target: { tabId: tab.id },
+        files: ["content.css"]
+      });
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["content.js"]
+      });
+      // Retry sending message after injection
+      await chrome.tabs.sendMessage(tab.id, { action: "toggle_ui" });
+    } catch (injectErr) {
+      console.error("Failed to inject content script or send message:", injectErr);
+    }
   }
 }
