@@ -3,13 +3,33 @@
   "name": "Web Data Extractor",
   "version": "1.0",
   "description": "Easily extract tabular data from websites with a point-and-click interface.",
-  "action": {
-    "default_title": "Toggle Web Data Extractor"
+  "icons": {
+    "16": "icon.svg",
+    "48": "icon.svg",
+    "128": "icon.svg"
   },
-  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_title": "Toggle Web Data Extractor",
+    "default_icon": "icon.svg"
+  },
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "MacCtrl+Shift+L"
+      },
+      "description": "Toggle Web Data Extractor UI"
+    }
+  },
+  "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "web-data-extractor@local"
+    }
   },
   "content_scripts": [
     {

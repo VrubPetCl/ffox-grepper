@@ -11,11 +11,30 @@ A Firefox web extension to easily extract tabular data from websites with a poin
 - **Export Data:** Download extracted data as JSON or CSV.
 - **Unobtrusive UI:** Minimal dark theme UI with shadow DOM encapsulation.
 
-## How to Install locally on Firefox
+## Installation
 
-1. Open Firefox and navigate to `about:debugging#/runtime/this-firefox`.
+### Temporary Installation (for development)
+
+1. Open Firefox/Zen and navigate to `about:debugging#/runtime/this-firefox`.
 2. Click on **Load Temporary Add-on...**
 3. Select the `manifest.json` file in this directory.
+
+*Note: The extension will be removed when the browser restarts.*
+
+### Permanent Installation (Zen / Firefox Dev Edition)
+
+To keep the extension installed permanently without submitting to the store:
+
+1.  **Enable Unsigned Extensions:**
+    *   Open your browser and navigate to `about:config`.
+    *   Search for `xpinstall.signatures.required`.
+    *   Double-click it to set it to `false`.
+2.  **Ensure Extension ID:**
+    *   Verify `manifest.json` contains the `browser_specific_settings` block with an ID (already included in this repo).
+3.  **Install from File:**
+    *   Navigate to `about:addons`.
+    *   Click the **Gear icon** ⚙️ and select **Install Add-on From File...**.
+    *   Select the `web_data_extractor.xpi` file from this directory.
 
 ## Usage
 
